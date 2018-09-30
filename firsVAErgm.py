@@ -9,7 +9,7 @@ from keras.models import Model
 from keras import backend as K
 from keras import metrics
 from keras.datasets import mnist
-
+from keras.callbacks import  TensorBoard
 batch_size = 100
 original_dim = 784
 latent_dim = 2
@@ -29,8 +29,9 @@ def sampling(args):
 # ENCODER
 x = Input(shape=(original_dim,))
 encoder_hidden_0 = Dense(intermediate_dim, activation='relu')
-encoder_hidden_1 = Dense(intermediate_dim*2, activation='relu')
-encoder_hidden_2 = Dense(intermediate_dim, activation='relu')
+encoder_hidden_1 = Dense(intermediate_dim*10, activation='relu')
+encoder_hidden_2 = Dense(intermediate_dim*2, activation='relu')
+encoder_hidden_3 = Dense(intermediate_dim, activation='relu')
 z_mean_layer = Dense(latent_dim)
 z_log_var_layer = Dense(latent_dim)
 
@@ -38,16 +39,21 @@ z_log_var_layer = Dense(latent_dim)
 encoder_hidden_0_out = encoder_hidden_0(x)
 encoder_hidden_1_out = encoder_hidden_1(encoder_hidden_0_out)
 encoder_hidden_2_out = encoder_hidden_2(encoder_hidden_1_out)
-z_mean = z_mean_layer(encoder_hidden_2_out)
+encoder_hidden_3_out = encoder_hidden_3(encoder_hidden_2_out)
+z_mean = z_mean_layer(encoder_hidden_3_out)
 z_log_var = z_log_var_layer(encoder_hidden_0_out)
 encoder = Model(x, z_mean)
 
 
 
 decoder_layers = [  Dense(intermediate_dim, activation='relu'),
-                    Dense(intermediate_dim*2, activation='relu'),
-                    Dense(intermediate_dim*4, activation='relu'),
-                    Dense(intermediate_dim*2, activation='relu'),
+                    Dense(intermediate_dim, activation='relu'),
+                    # Dense(intermediate_dim*2, activation='relu'),
+                    # Dense(intermediate_dim*4, activation='relu'),
+                    # Dense(intermediate_dim*8, activation='relu'),
+                    # Dense(intermediate_dim*4, activation='relu'),
+                    # Dense(intermediate_dim*2, activation='relu'),
+                    Dense(intermediate_dim, activation='relu'),
                     Dense(intermediate_dim, activation='relu'),
                     Dense(original_dim, activation='sigmoid') ]
 
@@ -83,7 +89,7 @@ def compute_loss(x,x_decoded_mean,z_log_var,z_mean):
     return vae_loss
 vae_loss = compute_loss(x, decoder_out, z_log_var, z_mean)
 vae.add_loss(vae_loss)
-vae.compile(optimizer='rmsprop', loss=None)
+vae.compile(optimizer='rmsprop', loss=None, metrics=['mse','mape'])
 
 
 
@@ -95,12 +101,13 @@ x_train = x_train.reshape((len(x_train), np.prod(x_train.shape[1:])))
 x_test = x_test.reshape((len(x_test), np.prod(x_test.shape[1:])))
 
 
-
 vae.fit(x_train,
         shuffle=True,
         epochs=epochs,
         batch_size=batch_size,
-        validation_data=(x_test, None))
+        validation_data=(x_test, None),
+
+        callbacks=[TensorBoard(log_dir='enc3dec10')])
 
 
 def plot_2d_digit_classes_latent(encoder):
@@ -134,16 +141,15 @@ def disp_generated(figure):
 # generator.save_weights('generator.h5')
 # encoder.save_weights('encoder.h5')
 
-# generator.save('my_model.h5')
-
-try:
+generator.save('my_model.h5')
+is_server =True
+if not is_server:
     import matplotlib.pyplot as plt
     plot_2d_digit_classes_latent(encoder)
     figure = generate_2d_manifold(generator)
     with open('figures.h','wb') as o: np.save(o,figure)
-
     with open('figures.h','rb') as o:  figures = np.load(o)
     disp_generated(figures)
-except:
+else:
     figure = generate_2d_manifold(generator)
     with open('figures.h','wb') as o: np.save(o,figure)
