@@ -57,11 +57,18 @@ def create_decoding_flow(dec_input, decoder_layers):
 x = Input(shape=(original_dim,))
 
 encoder_layers = [
- Dense(256, activation=LeakyReLU(alpha=0.5)),
- Dense(256, activation=LeakyReLU(alpha=0.4)),
- Dense(256, activation=LeakyReLU(alpha=0.3)),
- Dense(256, activation=LeakyReLU(alpha=0.2)),
- Dense(256, activation=LeakyReLU(alpha=0.1)),
+
+                    Dense(256),
+                    LeakyReLU(alpha=0.5),
+                    Dense(256),
+                    LeakyReLU(alpha=0.4),
+                    Dense(256),
+                    LeakyReLU(alpha=0.3),
+                    Dense(256),
+                    LeakyReLU(alpha=0.2),
+                    Dense(256),
+                    LeakyReLU(alpha=0.1),
+
 
 ]
 
@@ -72,20 +79,38 @@ encoder = Model(x, z_mean)
 
 # DECODER
 decoder_layers = [
-                    Dense(256, activation=LeakyReLU(alpha=0.3)),
-                    Dense(256, activation=LeakyReLU(alpha=0.2)),
-                    Dense(256*2, activation=LeakyReLU(alpha=0.1)),
-                    Dense(256*4, activation=LeakyReLU(alpha=0.1)),
-                    Dense(256*8, activation=LeakyReLU(alpha=0.1)),
+                    Dense(256),
+                    LeakyReLU(alpha=0.3),
+                    Dense(256),
+                    LeakyReLU(alpha=0.2),
+                    Dense(256*2),
+                    LeakyReLU(alpha=0.1),
+                    Dense(256*3),
+                    LeakyReLU(alpha=0.1),
+                    Dense(256*2),
+                    LeakyReLU(alpha=0.1),
+
+
                     Dropout(.20),
-                    Dense(256*2, activation=LeakyReLU(alpha=0.3)),
-                    Dense(256*4, activation=LeakyReLU(alpha=0.2)),
-                    Dense(256*8, activation=LeakyReLU(alpha=0.1)),
+
+                    Dense(256 * 2),
+                    LeakyReLU(alpha=0.3),
+                    Dense(256 * 4),
+                    LeakyReLU(alpha=0.2),
+                    Dense(256 * 8),
+                    LeakyReLU(alpha=0.1),
+
                     Dropout(.20),
-                    Dense(256, activation=LeakyReLU(alpha=0.3)),
-                    Dense(256, activation=LeakyReLU(alpha=0.1)),
-                    Dense(256, activation=LeakyReLU(alpha=0.05)),
-                    Dense(256, activation=LeakyReLU(alpha=0.01)),
+
+                    Dense(256 * 2),
+                    LeakyReLU(alpha=0.1),
+                    Dense(256 * 2),
+                    LeakyReLU(alpha=0.1),
+                    Dense(256 * 2),
+                    LeakyReLU(alpha=0.1),
+                    Dense(256 * 2),
+                    LeakyReLU(alpha=0.1),
+
                     Dense(original_dim, activation='sigmoid') ]
 
 sampling_layer = Lambda(sampling, output_shape=(latent_dim,))
